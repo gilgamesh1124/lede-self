@@ -1,0 +1,238 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+STOP=10
+USE_PROCD=1
+
+BATMAN_IFACE="bat0"
+
+validate_threshold() {
+	local low="$1"
+	local high="$2"
+	# Ensure low < high (both are negative, so low should be more negative)
+	if [ "$low" -ge "$high" ]; then
+		logger -t wiremesh "ERROR: rssi_threshold_low ($low) must be lower than rssi_threshold_high ($high)"
+		return 1
+	fi
+	return 0
+}
+
+start_service() {
+	config_load wiremesh
+
+	local enabled
+	config_get enabled general enabled 0
+	[ "$enabled" = "1" ] || return 0
+
+	# Read general config
+	local routing_algo gw_mode orig_interval gw_bandwidth
+	local bridge_loop_avoidance distributed_arp_table fragmentation
+	local aggregated_ogms multicast_mode hop_penalty ap_isolation bonding bridge_lan
+
+	config_get routing_algo general routing_algo "BATMAN_IV"
+	config_get gw_mode general gw_mode "off"
+	config_get gw_bandwidth general gw_bandwidth ""
+	config_get orig_interval general orig_interval 1000
+	config_get bridge_loop_avoidance general bridge_loop_avoidance 1
+	config_get distributed_arp_table general distributed_arp_table 1
+	config_get fragmentation general fragmentation 1
+	config_get aggregated_ogms general aggregated_ogms 1
+	config_get multicast_mode general multicast_mode 1
+	config_get hop_penalty general hop_penalty 30
+	config_get ap_isolation general ap_isolation 0
+	config_get bonding general bonding 0
+	config_get bridge_lan general bridge_lan 1
+
+	# Step 1: Create bat0 mesh interface in /etc/config/network
+	uci -q delete network.${BATMAN_IFACE}
+	uci set network.${BATMAN_IFACE}=interface
+	uci set network.${BATMAN_IFACE}.proto=batadv
+	uci set network.${BATMAN_IFACE}.routing_algo="${routing_algo}"
+	uci set network.${BATMAN_IFACE}.gw_mode="${gw_mode}"
+	uci set network.${BATMAN_IFACE}.orig_interval="${orig_interval}"
+	uci set network.${BATMAN_IFACE}.bridge_loop_avoidance="${bridge_loop_avoidance}"
+	uci set network.${BATMAN_IFACE}.distributed_arp_table="${distributed_arp_table}"
+	uci set network.${BATMAN_IFACE}.fragmentation="${fragmentation}"
+	uci set network.${BATMAN_IFACE}.aggregated_ogms="${aggregated_ogms}"
+	uci set network.${BATMAN_IFACE}.multicast_mode="${multicast_mode}"
+	uci set network.${BATMAN_IFACE}.hop_penalty="${hop_penalty}"
+	uci set network.${BATMAN_IFACE}.ap_isolation="${ap_isolation}"
+	uci set network.${BATMAN_IFACE}.bonding="${bonding}"
+
+	[ -n "$gw_bandwidth" ] && uci set network.${BATMAN_IFACE}.gw_bandwidth="${gw_bandwidth}"
+
+	# Step 2: Create hardif entries for each meshif
+	local idx=0
+	setup_meshif() {
+		local cfg="$1"
+		local ifname mtu
+		config_get ifname "$cfg" ifname
+		config_get mtu "$cfg" mtu 1536
+
+		[ -z "$ifname" ] && return
+
+		local hardif_name="wiremesh_${idx}"
+		uci -q delete network.${hardif_name}
+		uci set network.${hardif_name}=interface
+		uci set network.${hardif_name}.proto=batadv_hardif
+		uci set network.${hardif_name}.master="${BATMAN_IFACE}"
+		uci set network.${hardif_name}.device="${ifname}"
+		uci set network.${hardif_name}.mtu="${mtu}"
+
+		idx=$((idx + 1))
+	}
+	config_foreach setup_meshif meshif
+
+	# Step 3: Bridge integration - add bat0 to LAN bridge
+	if [ "$bridge_lan" = "1" ]; then
+		# Check if using device/bridge-lan style (modern OpenWrt) or ifname style (legacy)
+		local br_dev
+		br_dev=$(uci -q get network.@device[0].name 2>/dev/null)
+		if [ "$br_dev" = "br-lan" ]; then
+			# Modern style: add bat0 to bridge device ports
+			local current_ports
+			current_ports=$(uci -q get network.@device[0].ports 2>/dev/null)
+			case "$current_ports" in
+				*bat0*) ;; # already present
+				*)
+					uci add_list network.@device[0].ports="bat0"
+					;;
+			esac
+		else
+			# Legacy style: add bat0 to lan ifname
+			local current_ifname
+			current_ifname=$(uci -q get network.lan.ifname 2>/dev/null)
+			case "$current_ifname" in
+				*bat0*) ;; # already present
+				*)
+					if [ -n "$current_ifname" ]; then
+						uci set network.lan.ifname="${current_ifname} bat0"
+					else
+						uci set network.lan.ifname="bat0"
+					fi
+					;;
+			esac
+		fi
+	fi
+
+	uci commit network
+
+	# Step 4: Configure roaming if enabled
+	local roaming_enabled
+	config_get roaming_enabled roaming enabled 0
+
+	if [ "$roaming_enabled" = "1" ]; then
+		local rssi_low rssi_high hysteresis roam_interval
+		config_get rssi_low roaming rssi_threshold_low -75
+		config_get rssi_high roaming rssi_threshold_high -65
+		config_get hysteresis roaming roaming_hysteresis 5
+		config_get roam_interval roaming roaming_interval 5
+
+		# Validate thresholds
+		if ! validate_threshold "$rssi_low" "$rssi_high"; then
+			logger -t wiremesh "Using default thresholds: low=-75, high=-65"
+			rssi_low=-75
+			rssi_high=-65
+		fi
+
+		# Configure 802.11r and signal-based steering on all wifi-iface sections
+		local wifi_changed=0
+		configure_wifi_roaming() {
+			local cfg="$1"
+			local mode
+			config_get mode "$cfg" mode
+
+			# Only configure AP mode interfaces
+			[ "$mode" = "ap" ] || return
+
+			# Enable 802.11r Fast BSS Transition
+			uci set wireless.${cfg}.ieee80211r='1'
+			uci set wireless.${cfg}.ft_over_ds='1'
+			uci set wireless.${cfg}.ft_psk_generate_local='1'
+			uci set wireless.${cfg}.mobility_domain='mesh'
+
+			# Signal-based client steering (hostapd)
+			# rssi_reject_assoc_rssi: reject new associations below this signal
+			uci set wireless.${cfg}.rssi_reject_assoc_rssi="${rssi_low}"
+			# rssi_ignore_probe_request: ignore probes below this signal
+			uci set wireless.${cfg}.rssi_ignore_probe_request="${rssi_low}"
+
+			wifi_changed=1
+		}
+
+		config_load wireless
+		config_foreach configure_wifi_roaming wifi-iface
+		uci commit wireless
+
+		if [ "$wifi_changed" = "1" ]; then
+			# Reload wifi after network to apply roaming config
+			( sleep 3 && wifi reload ) &
+		fi
+	fi
+
+	# Step 5: Reload network to apply batman-adv config
+	/etc/init.d/network reload
+}
+
+stop_service() {
+	# Remove wiremesh-created hardif entries
+	local idx=0
+	while uci -q get network.wiremesh_${idx} >/dev/null 2>&1; do
+		uci -q delete network.wiremesh_${idx}
+		idx=$((idx + 1))
+	done
+
+	# Remove bat0 from bridge
+	local br_dev
+	br_dev=$(uci -q get network.@device[0].name 2>/dev/null)
+	if [ "$br_dev" = "br-lan" ]; then
+		uci -q del_list network.@device[0].ports="bat0"
+	else
+		local current_ifname
+		current_ifname=$(uci -q get network.lan.ifname 2>/dev/null)
+		local new_ifname
+		new_ifname=$(echo "$current_ifname" | sed 's/ *bat0 */ /g; s/^ *//; s/ *$//')
+		if [ -n "$new_ifname" ]; then
+			uci set network.lan.ifname="$new_ifname"
+		else
+			uci -q delete network.lan.ifname
+		fi
+	fi
+
+	# Remove bat0 interface
+	uci -q delete network.${BATMAN_IFACE}
+	uci commit network
+
+	# Revert roaming config on wifi interfaces
+	local roaming_enabled
+	config_load wiremesh
+	config_get roaming_enabled roaming enabled 0
+
+	if [ "$roaming_enabled" = "1" ]; then
+		revert_wifi_roaming() {
+			local cfg="$1"
+			uci -q delete wireless.${cfg}.ieee80211r
+			uci -q delete wireless.${cfg}.ft_over_ds
+			uci -q delete wireless.${cfg}.ft_psk_generate_local
+			uci -q delete wireless.${cfg}.mobility_domain
+			uci -q delete wireless.${cfg}.rssi_reject_assoc_rssi
+			uci -q delete wireless.${cfg}.rssi_ignore_probe_request
+		}
+
+		config_load wireless
+		config_foreach revert_wifi_roaming wifi-iface
+		uci commit wireless
+		wifi reload &
+	fi
+
+	/etc/init.d/network reload
+}
+
+service_triggers() {
+	procd_add_reload_trigger "wiremesh"
+}
+
+reload_service() {
+	stop_service
+	start_service
+}

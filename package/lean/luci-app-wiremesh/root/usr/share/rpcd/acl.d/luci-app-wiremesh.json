@@ -1,0 +1,21 @@
+{
+	"luci-app-wiremesh": {
+		"description": "Grant UCI access for luci-app-wiremesh",
+		"read": {
+			"uci": ["wiremesh", "network", "wireless"],
+			"file": {
+				"/sys/class/net/bat0/*": ["read"],
+				"/sys/class/net/bat0/mesh/*": ["read"],
+				"/sys/module/batman_adv/version": ["read"],
+				"/tmp/dhcp.leases": ["read"]
+			}
+		},
+		"write": {
+			"uci": ["wiremesh", "network", "wireless"],
+			"file": {
+				"/usr/sbin/batctl": ["exec"],
+				"/usr/bin/iwinfo": ["exec"]
+			}
+		}
+	}
+}

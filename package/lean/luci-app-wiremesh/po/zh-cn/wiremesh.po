@@ -1,0 +1,326 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: luci-app-wiremesh\n"
+"Language: zh-cn\n"
+
+msgid "Wired Mesh"
+msgstr "有线Mesh组网"
+
+msgid "Wired Mesh Settings"
+msgstr "有线Mesh组网设置"
+
+msgid "Configure B.A.T.M.A.N. Advanced wired mesh networking. Connect multiple routers via Ethernet to form an automatic mesh network."
+msgstr "配置 B.A.T.M.A.N. Advanced 有线Mesh组网。通过以太网连接多台路由器，自动组建Mesh网络。"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "General Settings"
+msgstr "通用设置"
+
+msgid "Basic Settings"
+msgstr "基本设置"
+
+msgid "Roaming Settings"
+msgstr "漫游设置"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Enable wired mesh networking"
+msgstr "启用有线Mesh组网"
+
+msgid "Routing Algorithm"
+msgstr "路由算法"
+
+msgid "BATMAN_IV uses TQ (link quality) metric, BATMAN_V uses throughput metric"
+msgstr "BATMAN_IV 使用链路质量(TQ)指标，BATMAN_V 使用吞吐量指标"
+
+msgid "Gateway Mode"
+msgstr "网关模式"
+
+msgid "Set this node's role in the mesh: off (relay only), client (use mesh gateway for internet), server (provide internet to mesh)"
+msgstr "设置此节点在Mesh网络中的角色：关闭（仅中继）、客户端（通过Mesh网关上网）、服务器（为Mesh提供互联网）"
+
+msgid "Off"
+msgstr "关闭"
+
+msgid "Client"
+msgstr "客户端"
+
+msgid "Server"
+msgstr "服务器"
+
+msgid "Gateway Bandwidth (Kbit/s)"
+msgstr "网关带宽 (Kbit/s)"
+
+msgid "Advertised gateway bandwidth, only used in server mode"
+msgstr "通告的网关带宽，仅在服务器模式下使用"
+
+msgid "OGM Interval (ms)"
+msgstr "OGM发包间隔 (毫秒)"
+
+msgid "Originator message interval in milliseconds. Lower values improve convergence but increase overhead"
+msgstr "源节点消息发送间隔（毫秒）。较低的值可加快网络收敛，但会增加开销"
+
+msgid "Bridge with LAN"
+msgstr "桥接至LAN"
+
+msgid "Add the mesh interface (bat0) to the LAN bridge, allowing mesh clients to share the same subnet"
+msgstr "将Mesh接口(bat0)加入LAN网桥，使Mesh客户端与LAN共享同一子网"
+
+msgid "Enable Roaming"
+msgstr "启用漫游"
+
+msgid "Enable wireless client roaming optimization across mesh nodes. Uses 802.11r Fast BSS Transition and signal-based steering."
+msgstr "启用无线客户端跨Mesh节点漫游优化。使用802.11r快速BSS切换和基于信号的引导。"
+
+msgid "Roaming Threshold Configuration"
+msgstr "漫游阈值配置"
+
+msgid "Signal Lower Threshold (dBm)"
+msgstr "信号下限阈值 (dBm)"
+
+msgid "When a client's signal drops below this value, the AP will start steering the client to find a better node. Typical range: -80 to -70 dBm"
+msgstr "当客户端信号低于此值时，AP将开始引导客户端寻找更好的节点。典型范围：-80 到 -70 dBm"
+
+msgid "Signal Upper Threshold (dBm)"
+msgstr "信号上限阈值 (dBm)"
+
+msgid "A new AP will only accept the roaming client if signal is above this value. Must be higher than the lower threshold. This prevents switching to an AP that is only marginally better, avoiding ping-pong behavior."
+msgstr "新AP仅在客户端信号高于此值时才接受漫游。必须高于下限阈值。防止切换到仅略好的AP，避免乒乓效应。"
+
+msgid "Hysteresis (dBm)"
+msgstr "迟滞值 (dBm)"
+
+msgid "The new AP's signal must be at least this many dBm stronger than the current AP. Higher values prevent flip-flopping between APs in overlap zones. Recommended: 3-10 dBm"
+msgstr "新AP的信号必须比当前AP强至少此值。较高的值可防止在重叠区域内来回切换。建议：3-10 dBm"
+
+msgid "Detection Interval (seconds)"
+msgstr "检测间隔 (秒)"
+
+msgid "How often to evaluate client signal strength for roaming decisions. Lower values react faster but increase CPU load"
+msgstr "评估客户端信号强度以做出漫游决策的频率。较低的值反应更快但增加CPU负载"
+
+msgid "How Roaming Works"
+msgstr "漫游工作原理"
+
+msgid "Roaming Mechanism"
+msgstr "漫游机制"
+
+msgid "When a client's signal drops below the <em>Lower Threshold</em>, the current AP begins steering the client away."
+msgstr "当客户端信号低于<em>下限阈值</em>时，当前AP开始引导客户端离开。"
+
+msgid "A neighboring AP will only accept the client if the signal is above the <em>Upper Threshold</em>."
+msgstr "邻近AP仅在信号高于<em>上限阈值</em>时才接受该客户端。"
+
+msgid "Additionally, the new AP must be at least <em>Hysteresis</em> dBm stronger than the current AP."
+msgstr "此外，新AP信号必须比当前AP强至少<em>迟滞值</em> dBm。"
+
+msgid "This dual-threshold + hysteresis design prevents rapid back-and-forth switching at coverage boundaries."
+msgstr "双阈值+迟滞设计可防止在覆盖边界处快速来回切换。"
+
+msgid "Bridge Loop Avoidance"
+msgstr "桥接环路避免"
+
+msgid "Prevent layer 2 loops when the mesh is bridged with other networks"
+msgstr "当Mesh与其他网络桥接时防止二层环路"
+
+msgid "Distributed ARP Table"
+msgstr "分布式ARP表"
+
+msgid "Speed up ARP resolution across the mesh by caching ARP entries on intermediate nodes"
+msgstr "通过在中间节点缓存ARP条目来加速跨Mesh的ARP解析"
+
+msgid "Fragmentation"
+msgstr "分片"
+
+msgid "Allow batman-adv to fragment packets that exceed the interface MTU"
+msgstr "允许batman-adv对超过接口MTU的数据包进行分片"
+
+msgid "Aggregated OGMs"
+msgstr "聚合OGM"
+
+msgid "Combine multiple originator messages into a single packet to reduce overhead"
+msgstr "将多个源节点消息合并为单个数据包以减少开销"
+
+msgid "Multicast Mode"
+msgstr "组播模式"
+
+msgid "Optimize multicast traffic distribution in the mesh"
+msgstr "优化Mesh中的组播流量分发"
+
+msgid "Hop Penalty"
+msgstr "跳数惩罚"
+
+msgid "Penalty applied per hop to prefer shorter routes. Range 0-255, higher values prefer shorter paths"
+msgstr "每跳施加的惩罚值，以优先选择较短路由。范围0-255，值越大越倾向短路径"
+
+msgid "AP Isolation"
+msgstr "AP隔离"
+
+msgid "Prevent mesh clients from communicating directly with each other"
+msgstr "阻止Mesh客户端之间直接通信"
+
+msgid "Bonding"
+msgstr "链路绑定"
+
+msgid "Combine multiple mesh links to the same neighbor for increased throughput"
+msgstr "将到同一邻居的多条Mesh链路合并以提升吞吐量"
+
+msgid "Mesh Interfaces"
+msgstr "Mesh接口"
+
+msgid "Select which Ethernet ports participate in the mesh network. Each port connects to another mesh router via cable."
+msgstr "选择哪些以太网端口参与Mesh网络。每个端口通过网线连接到另一台Mesh路由器。"
+
+msgid "Interface"
+msgstr "接口"
+
+msgid "MTU"
+msgstr "MTU"
+
+msgid "Recommended 1536 for wired mesh (adds ~32 bytes batman-adv overhead)"
+msgstr "有线Mesh建议1536（batman-adv约增加32字节封装开销）"
+
+msgid "Wired Mesh Status"
+msgstr "有线Mesh状态"
+
+msgid "Real-time mesh network topology and connected devices"
+msgstr "实时Mesh网络拓扑和连接设备"
+
+msgid "Mesh Overview"
+msgstr "Mesh概览"
+
+msgid "batman-adv Version"
+msgstr "batman-adv 版本"
+
+msgid "Routing Algorithm"
+msgstr "路由算法"
+
+msgid "Interface Status"
+msgstr "接口状态"
+
+msgid "Online"
+msgstr "在线"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "Local MAC"
+msgstr "本机MAC"
+
+msgid "batman-adv module is not loaded or bat0 interface does not exist."
+msgstr "batman-adv模块未加载或bat0接口不存在。"
+
+msgid "Please ensure mesh is enabled and configuration is applied."
+msgstr "请确认Mesh已启用且配置已应用。"
+
+msgid "Mesh Network Topology"
+msgstr "Mesh网络拓扑"
+
+msgid "This Node (Local)"
+msgstr "本节点（本机）"
+
+msgid "Remote Node"
+msgstr "远程节点"
+
+msgid "No mesh nodes detected. Please check mesh configuration and cable connections."
+msgstr "未检测到Mesh节点。请检查Mesh配置和网线连接。"
+
+msgid "MAC Address"
+msgstr "MAC地址"
+
+msgid "IP Address"
+msgstr "IP地址"
+
+msgid "Hostname"
+msgstr "主机名"
+
+msgid "Connection"
+msgstr "连接类型"
+
+msgid "Signal (dBm)"
+msgstr "信号 (dBm)"
+
+msgid "WiFi Device"
+msgstr "无线设备"
+
+msgid "WiFi"
+msgstr "无线"
+
+msgid "Wired"
+msgstr "有线"
+
+msgid "No connected devices"
+msgstr "无连接设备"
+
+msgid "Neighbors"
+msgstr "邻居节点"
+
+msgid "Neighbor MAC"
+msgstr "邻居MAC"
+
+msgid "Last Seen (ms)"
+msgstr "最后可见 (毫秒)"
+
+msgid "No neighbor data available"
+msgstr "无邻居数据"
+
+msgid "No neighbors found"
+msgstr "未发现邻居节点"
+
+msgid "Originators"
+msgstr "源节点"
+
+msgid "Originator"
+msgstr "源节点"
+
+msgid "Next Hop"
+msgstr "下一跳"
+
+msgid "Outgoing IF"
+msgstr "出接口"
+
+msgid "Link Quality"
+msgstr "链路质量"
+
+msgid "No originator data available"
+msgstr "无源节点数据"
+
+msgid "No originators found"
+msgstr "未发现源节点"
+
+msgid "Gateway List"
+msgstr "网关列表"
+
+msgid "Gateway"
+msgstr "网关"
+
+msgid "Bandwidth"
+msgstr "带宽"
+
+msgid "Selected"
+msgstr "已选"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "No"
+msgstr "否"
+
+msgid "Gateway mode is off. Set gateway mode to client or server to see gateway information."
+msgstr "网关模式已关闭。将网关模式设为客户端或服务器以查看网关信息。"
+
+msgid "No gateway data available"
+msgstr "无网关数据"
+
+msgid "No gateways found in the mesh"
+msgstr "Mesh中未发现网关"

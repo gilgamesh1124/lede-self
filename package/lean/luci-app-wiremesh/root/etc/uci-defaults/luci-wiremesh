@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@wiremesh[-1]
+	add ucitrack wiremesh
+	set ucitrack.@wiremesh[-1].init=wiremesh
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0
